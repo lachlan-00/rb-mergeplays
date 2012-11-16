@@ -22,14 +22,22 @@
 
 """
 
+import sys
 import os
+import shutil
 import codecs
 import xml
 import xml.etree.ElementTree as etree
 
 from xml.etree.ElementTree import tostring
 
-LASTFM_FILE = 'loved.txt'
+try:
+    if sys.argv:
+        LASTFM_FILE = sys.argv[1]
+    else:
+        LASTFM_FILE = 'loved.txt'
+except:
+    LASTFM_FILE = 'loved.txt'
 LAST_FM_FILE = codecs.open(LASTFM_FILE, "r", "utf8")
 LAST_FM_LIST = []
 
@@ -108,14 +116,13 @@ for lines in LAST_FM_FILE:
     lines = lines.replace('\n','')
     lines = lines.split('\t')
     LAST_FM_LIST.insert(count,lines)
-    print lines
     count = count + 1
 LAST_FM_FILE.close()
 
 print 'creating db backup'
 PATH = '/.local/share/rhythmbox/'
 DB = (os.getenv('HOME') + PATH + 'rhythmdb.xml')
-os.copy(DB, os.getenv('HOME') + PATH + 'rhythmdb-backup-rate.xml')
+shutil.copy(DB, os.getenv('HOME') + PATH + 'rhythmdb-backup-rate.xml')
 
 root = (etree.parse(os.getenv('HOME')+'/.local/share/rhythmbox/rhythmdb.xml')).getroot()
 items = root.getiterator("entry")
