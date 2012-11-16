@@ -23,6 +23,7 @@
 """
 
 import os
+import shutil
 import codecs
 import xml
 import xml.etree.ElementTree as etree
@@ -118,6 +119,11 @@ for lines in LAST_FM_FILE:
     LAST_FM_LIST.insert(count, lines)
     count = count + 1
 LAST_FM_FILE.close()
+
+print 'creating db backup'
+PATH = '/.local/share/rhythmbox/'
+DB = (os.getenv('HOME') + PATH + 'rhythmdb.xml')
+os.copy(DB, os.getenv('HOME') + PATH + 'rhythmdb-backup-merge.xml')
 
 print 'opening rhythmdb...'
 root = (etree.parse(os.getenv('HOME') +

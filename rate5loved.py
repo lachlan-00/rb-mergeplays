@@ -35,7 +35,6 @@ LAST_FM_LIST = []
 
 count = 0
 
-
 urlascii = ('%', "#", ';', ' ', '"', '<', '>', '?', '[', '\\',
             "]", '^', '`', '{', '|', '}', '€', '‚', 'ƒ', '„',
             '…', '†', '‡', 'ˆ', '‰', 'Š', '‹', 'Œ', 'Ž', '‘',
@@ -113,37 +112,41 @@ for lines in LAST_FM_FILE:
     count = count + 1
 LAST_FM_FILE.close()
 
-#root = (etree.parse(os.getenv('HOME')+'/.local/share/rhythmbox/rhythmdb.xml')).getroot()
-#items = root.getiterator("entry")
+print 'creating db backup'
+PATH = '/.local/share/rhythmbox/'
+DB = (os.getenv('HOME') + PATH + 'rhythmdb.xml')
+os.copy(DB, os.getenv('HOME') + PATH + 'rhythmdb-backup-rate.xml')
+
+root = (etree.parse(os.getenv('HOME')+'/.local/share/rhythmbox/rhythmdb.xml')).getroot()
+items = root.getiterator("entry")
 
 # Search the database for the song and update rating
 for songs in LAST_FM_LIST:
-    print songs
-    #for entries in items:
-    #    foundtitle = False
-    #    foundartist = False
-    #    mergelove = False
-    #    if entries.attrib == {'type': 'song'}:
-    #        for info in entries:
-    #            if info.tag == 'title':
-    #                if info.text == songs[1]:
-    #                    foundtitle = True
-    #            if info.tag == 'artist':
-    #                if info.text == songs[2]:
-    #                    foundartist = True
-    #            if info.tag == 'rating' and foundartist == True and foundtitle == True:
-    #                if not info.text == '5':
-    #                    print ('Loved: ' + songs[2] + ' - ' + songs[1])
-    #                    mergelove = True
-    #                    info.text = '5'
-    #        # If rating wasn't found insert it. 
-    #        # Rhythmbox seems to fix indentation and location on restart
-    #        if foundartist == True and foundtitle == True and mergelove == False:
-    #            mergelove = True
-    #            insertloved = etree.SubElement(entries, 'rating')
-    #            insertloved.text = '5'
-    #            print ('creating: ' + songs[2] + ' - ' + songs[1])
+    for entries in items:
+        foundtitle = False
+        foundartist = False
+        mergelove = False
+        if entries.attrib == {'type': 'song'}:
+            for info in entries:
+                if info.tag == 'title':
+                    if info.text == songs[1]:
+                        foundtitle = True
+                if info.tag == 'artist':
+                    if info.text == songs[2]:
+                        foundartist = True
+                if info.tag == 'rating' and foundartist == True and foundtitle == True:
+                    if not info.text == '5':
+                        print ('Loved: ' + songs[2] + ' - ' + songs[1])
+                        mergelove = True
+                        info.text = '5'
+            # If rating wasn't found insert it. 
+            # Rhythmbox seems to fix indentation and location on restart
+            if foundartist == True and foundtitle == True and mergelove == False:
+                mergelove = True
+                insertloved = etree.SubElement(entries, 'rating')
+                insertloved.text = '5'
+                print ('creating: ' + songs[2] + ' - ' + songs[1])
 
 # Save changes
-#output = etree.ElementTree(root)
-#output.write((os.getenv('HOME')+'/.local/share/rhythmbox/rhythmdb.xml'), encoding="utf-8")
+output = etree.ElementTree(root)
+output.write((os.getenv('HOME')+'/.local/share/rhythmbox/rhythmdb.xml'), encoding="utf-8")
