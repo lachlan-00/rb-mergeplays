@@ -123,7 +123,6 @@ for lines in LAST_FM_FILE:
     lines.pop()
     lines.pop()
     LAST_FM_LIST.insert(count, lines)
-    print lines
     count = count + 1
 LAST_FM_FILE.close()
 
