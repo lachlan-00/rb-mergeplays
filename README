@@ -6,7 +6,7 @@ Currently the project is two script files:
  * rate5loved.py
 
 ABOUT THE SCRIPTS
-
+-----------------
 I have used Last.fm for a lot longer than I've used Rhythmbox and a lot of songs show last played as 'Never'. 
 That kinda sucks for shuffle especially on large libraries.
 
@@ -16,10 +16,10 @@ But with Merge Plays you can restore some of the lost information.
 lastexport.py is used for exporting your listening history (also loved/banned tracks) from last.fm or libre.fm to a text file.
 http://bugs.foocorp.net/projects/librefm/wiki/LastToLibre
 
---- MERGEPLAYS.PY ---
 
+MERGEPLAYS.PY
+-------------
 This script that will parse a text file and add each play to the current total in Rhythmbox OR create one if it's never been played. It
-
 
 USAGE
  * Get a dump for your username.
@@ -28,17 +28,18 @@ USAGE
     python ./mergeplays.py dump.txt
 
 
---- RATE5LOVED.PY ---
-
+RATE5LOVED.PY
+-------------
 This script will take an export of your loved track from the last.fm website and make all those tracks 5 stars.
-
 It works in the same way as merge plays and will be integrated soon.
 
 USAGE
-
  * Pull your loved tracks with lastexport:
      python ./lastexport.py -u your_lastfm_username -t loved -o loved.txt
-
  * Merge with database:
      python ./rate5loved.py loved.txt
 
+
+Notes
+-----
+If you use the default file names (dump.txt/loved.txt) the scripts will look for those files by default if no argument is given.
