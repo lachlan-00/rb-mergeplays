@@ -136,10 +136,10 @@ for songs in LAST_FM_LIST:
         if entries.attrib == {'type': 'song'}:
             for info in entries:
                 if info.tag == 'title':
-                    if info.text == songs[1]:
+                    if (info.text).lower() == songs[1].lower():
                         foundtitle = True
                 if info.tag == 'artist':
-                    if info.text == songs[2]:
+                    if (info.text).lower() == songs[2].lower():
                         foundartist = True
                 if info.tag == 'rating' and foundartist == True and foundtitle == True:
                     if not info.text == '5':
