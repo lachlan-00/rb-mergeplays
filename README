@@ -6,58 +6,40 @@ Currently the project is two script files:
  * rate5loved.py
 
 ABOUT THE SCRIPTS
-
+-----------------
 I have used Last.fm for a lot longer than I've used Rhythmbox and a lot of songs show last played as 'Never'. 
 That kinda sucks for shuffle especially on large libraries.
 
 Another possibility is that your database gets corrupted and has to be removed. You lose everything!!!
 But with Merge Plays you can restore some of the lost information.
 
+lastexport.py is used for exporting your listening history (also loved/banned tracks) from last.fm or libre.fm to a text file.
+http://bugs.foocorp.net/projects/librefm/wiki/LastToLibre
 
---- MERGEPLAYS.PY ---
 
+MERGEPLAYS.PY
+-------------
 This script that will parse a text file and add each play to the current total in Rhythmbox OR create one if it's never been played. It
 
-The format of the text is the same as a last scrape dump file and are tab seperated.
-
-EXAMPLE OF DUMP FILE:
-$ARTISTNAME    $TRACKTITLE    $DATEOFPLAY
-X-Fusion       Intoxicated    2010-12-22T05:05:47Z
-
-You can do this yourself or download Lastscrape and have it do the work for you. The third column data is not used but replaced during the script execution so it must be in the dump
-
-Lastscrape - GUI
-    http://cs.joensuu.fi/~pviktor/lastscrape/
-Lastscrape - Script
-    http://bugs.foocorp.net/projects/librefm/wiki/Using_lastscrape
-
 USAGE
- * Download lastscrape
- * Get a dump for your username. (lastscrape.py USER [OUTPUT_FILE])
-      lastscrape.py ocean_machine ./dump
- * When that's finished grab Merge Plays and copy the dump file to the same folder.
- * Make a backup of your rhythmbox library.
-    cp /home/$USERNAME/.local/share/rhythmbox/rhythmdb.xml /home/$USERNAME/.local/share/rhythmbox/rhythmdb.xml-backup
+ * Get a dump for your username.
+     python ./lastexport.py -u your_lastfm_username -o dump.txt
  * Run Merge Plays
-    python ./mergeplays.py
- * Run rhythmbox with your updated play counts.
+    python ./mergeplays.py dump.txt
 
 
---- RATE5LOVED.PY ---
-
+RATE5LOVED.PY
+-------------
 This script will take an export of your loved track from the last.fm website and make all those tracks 5 stars.
-
 It works in the same way as merge plays and will be integrated soon.
 
 USAGE
- * Go to http://www.last.fm/user/$USERNAME/library/loved
- * On the top right side there is an 'Export Loved Tracks' link. Click it.
- * Set format to 'TSV (Tab Seperated Values)' and click Export
- * Save the file as 'lovedtracks.tsv'in the same location as rate5loved.py
- * Make a backup of your rhythmbox library.
-    cp /home/$USERNAME/.local/share/rhythmbox/rhythmdb.xml /home/$USERNAME/.local/share/rhythmbox/rhythmdb.xml-backup
- * Run Rate 5 Loved
-    python ./rate5loved.py
+ * Pull your loved tracks with lastexport:
+     python ./lastexport.py -u your_lastfm_username -t loved -o loved.txt
+ * Merge with database:
+     python ./rate5loved.py loved.txt
 
 
-Everything is very basic right now but it works and I'll be making it better and more configurable.
+Notes
+-----
+If you use the default file names (dump.txt/loved.txt) the scripts will look for those files by default if no argument is given.
