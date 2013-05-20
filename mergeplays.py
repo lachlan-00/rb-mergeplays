@@ -42,6 +42,7 @@ LAST_FM_FILE = codecs.open(LASTFM_FILE, "r", "utf8")
 LAST_FM_LIST = []
 COUNT_LIST = []
 ERROR_LIST = []
+HOMEFOLDER = os.getenv('HOME')
 
 urlascii = ('%', "#", ';', ' ', '"', '<', '>', '?', '[', '\\',
             "]", '^', '`', '{', '|', '}', '€', '‚', 'ƒ', '„',
@@ -172,7 +173,7 @@ for songs in COUNT_LIST:
                          foundtitle == True):
                     mergeplays = True
                     if not int(info.text) >= int(songs[0]):
-                        changefile = '/home/user/mergeplays-changes.txt'
+                        changefile = HOMEFOLDER + '/mergeplays-changes.txt'
                         filechanges = codecs.open(changefile,
                                                     "a", "utf8")
                         filechanges.write('merging: ' + songs[2] + ' - ' +
@@ -187,7 +188,7 @@ for songs in COUNT_LIST:
                 mergeplays = True
                 insertplaycount = etree.SubElement(entries, 'play-count')
                 insertplaycount.text = str(songs[0])
-                filechanges = codecs.open('/home/user/mergeplays-changes.txt',
+                filechanges = codecs.open(HOMEFOLDER + '/mergeplays-changes.txt',
                                             "a", "utf8")
                 filechanges.write('creating: ' + songs[2] + ' - ' + songs[1] +
                                      ' - ' + str(songs[0]) + '\n')
@@ -198,17 +199,17 @@ for songs in COUNT_LIST:
 
     #print ERROR_LIST
     if mergeplays == False:
-        files = codecs.open('/home/user/mergeplays-error.txt', "a", "utf8")
+        files = codecs.open(HOMEFOLDER + '/mergeplays-error.txt', "a", "utf8")
         files.write(str(songs) + '\n')
         files.close()
 
 # Save changes
 output = etree.ElementTree(root)
-output.write((os.getenv('HOME') + '/.local/share/rhythmbox/rhythmdb.xml'),
-                    encoding="utf-8")
+output.write((HOMEFOLDER + '/.local/share/rhythmbox/rhythmdb.xml'),
+             encoding="utf-8")
 
 #print ERROR_LIST
-#files = codecs.open('/home/user/mergeplays-error.txt', "w", "utf8")
+#files = codecs.open(HOMEFOLDER + '/mergeplays-error.txt', "w", "utf8")
 #for items in ERROR_LIST:
 #    files.write(str(items) + '\n')
 #files.close()
