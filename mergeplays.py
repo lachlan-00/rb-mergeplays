@@ -144,7 +144,8 @@ for plays in LAST_FM_LIST:
     plays[0] = 1
     exist = False
     for songs in COUNT_LIST:
-        if plays[2] == songs[2] and plays[1] == songs[1]:
+        if plays[2] == songs[2] and plays[1] == songs[1] and (
+                plays[3] == songs[3]):
             songs[0] = songs[0] + plays[0]
             exist = True
     if exist == False:
@@ -160,6 +161,7 @@ for songs in COUNT_LIST:
     for entries in items:
         foundtitle = False
         foundartist = False
+        foundalbum = False
         mergeplays = False
         if entries.attrib == {'type': 'song'}:
             for info in entries:
@@ -169,8 +171,11 @@ for songs in COUNT_LIST:
                 if info.tag == 'artist':
                     if (info.text).lower() == songs[2].lower():
                         foundartist = True
+                if info.tag == 'album':
+                    if (info.text).lower() == songs[3].lower():
+                      foundalbum = True
                 if info.tag == 'play-count' and foundartist == True and (
-                         foundtitle == True):
+                         foundtitle == True and foundalbum == True ):
                     mergeplays = True
                     if not int(info.text) >= int(songs[0]):
                         changefile = HOMEFOLDER + '/mergeplays-changes.txt'
@@ -184,7 +189,7 @@ for songs in COUNT_LIST:
             # If play-count wasn't found insert it.
             # Rhythmbox seems to fix indentation and location on restart
             if foundartist == True and foundtitle == True and (
-                    mergeplays == False):
+                    foundalbum == True and mergeplays == False):
                 mergeplays = True
                 insertplaycount = etree.SubElement(entries, 'play-count')
                 insertplaycount.text = str(songs[0])
