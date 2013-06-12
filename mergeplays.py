@@ -38,11 +38,15 @@ try:
         LASTFM_FILE = 'dump.txt'
 except:
     LASTFM_FILE = 'dump.txt'
+
 LAST_FM_FILE = codecs.open(LASTFM_FILE, "r", "utf8")
 LAST_FM_LIST = []
 COUNT_LIST = []
 ERROR_LIST = []
 HOMEFOLDER = os.getenv('HOME')
+PATH = '/.local/share/rhythmbox/'
+DB = (HOMEFOLDER + PATH + 'rhythmdb.xml')
+DBBackup = (HOMEFOLDER + PATH + 'rhythmdb-backup-merge.xml')
 
 urlascii = ('%', "#", ';', ' ', '"', '<', '>', '?', '[', '\\',
             "]", '^', '`', '{', '|', '}', '€', '‚', 'ƒ', '„',
@@ -128,13 +132,10 @@ for lines in LAST_FM_FILE:
 LAST_FM_FILE.close()
 
 print 'creating db backup'
-PATH = '/.local/share/rhythmbox/'
-DB = (os.getenv('HOME') + PATH + 'rhythmdb.xml')
-shutil.copy(DB, os.getenv('HOME') + PATH + 'rhythmdb-backup-merge.xml')
+shutil.copy(DB, DBBackup)
 
 print 'opening rhythmdb...'
-root = (etree.parse(os.getenv('HOME') +
-            '/.local/share/rhythmbox/rhythmdb.xml')).getroot()
+root = (etree.parse(DB)).getroot()
 items = root.getiterator("entry")
 
 print 'merging dump file plays together...'
@@ -193,12 +194,14 @@ for songs in COUNT_LIST:
                 mergeplays = True
                 insertplaycount = etree.SubElement(entries, 'play-count')
                 insertplaycount.text = str(songs[0])
-                filechanges = codecs.open(HOMEFOLDER + '/mergeplays-changes.txt',
-                                            "a", "utf8")
+                filechanges = codecs.open(HOMEFOLDER +
+                                           '/mergeplays-changes.txt',
+                                           "a", "utf8")
                 filechanges.write('creating: ' + songs[2] + ' - ' + songs[1] +
                                      ' - ' + str(songs[0]) + '\n')
                 filechanges.close()
     count = count + 1
+    # Every hundred files print progress
     if str(count)[-2:] == '00':
         print str(count) + '/' + str(len(COUNT_LIST)) + ' files processed'
 
@@ -210,8 +213,7 @@ for songs in COUNT_LIST:
 
 # Save changes
 output = etree.ElementTree(root)
-output.write((HOMEFOLDER + '/.local/share/rhythmbox/rhythmdb.xml'),
-             encoding="utf-8")
+output.write((DB), encoding="utf-8")
 
 #print ERROR_LIST
 #files = codecs.open(HOMEFOLDER + '/mergeplays-error.txt', "w", "utf8")
