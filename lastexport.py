@@ -24,6 +24,9 @@
 
 """
 
+# Script for exporting tracks through audioscrobbler API.
+# Usage: lastexport.py -u USER [-o OUTFILE] [-p STARTPAGE] [-s SERVER]
+
 import urllib2, urllib, sys, time, re
 import xml.etree.ElementTree as ET
 from optparse import OptionParser
