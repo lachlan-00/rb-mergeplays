@@ -21,7 +21,7 @@ import shutil
 import sys
 import xml.etree.ElementTree as etree
 
-
+wehavemerged = False
 processplays = None
 processloved = None
 dumpfile = None
@@ -34,7 +34,8 @@ HOMEFOLDER = os.getenv('HOME')
 PATH = '/.local/share/rhythmbox/'
 DB = (HOMEFOLDER + PATH + 'rhythmdb.xml')
 DBBackup = (HOMEFOLDER + PATH + 'rhythmdb-backup-merge.xml')
-ERRORPATH = HOMEFOLDER + '/mergeplays-error.txt'
+ERRORPATH = HOMEFOLDER + '/mergeplays-playcount-error.txt'
+LOVEERRORPATH = HOMEFOLDER + '/mergeplays-loved-error.txt'
 
 # get dump file name from arguments
 for arguments in sys.argv:
@@ -124,28 +125,26 @@ except FileNotFoundError:
 except PermissionError:
     backupcreated = False
 
-notfoundcount = 0
-notfoundlist = []
 
 print('Opening rhythmdb...\n')
 root = etree.parse(os.path.expanduser(DB)).getroot()
 items = [s for s in root.getiterator("entry") if s.attrib.get('type') == 'song']
 
-CACHED_DATA = []
-for entries in items:
-    if entries.attrib.get('type') == 'song':
-        data = {}
-        for info in entries:
-            if info.tag in ('title', 'artist', 'album'):
-                data[info.tag] = info.text.lower()
-        #print(data)
-        CACHED_DATA.append('%(title)s\t%(artist)s\t%(album)s' % data)
-
 
 # only process id db found and backup created.
 if os.path.isfile(DB) and backupcreated:
     print('Connection Established\n')
-    if processplays:
+    if processplays and os.path.isfile(dumpfile):
+        CACHED_DATA = []
+        for entries in items:
+            if entries.attrib.get('type') == 'song':
+                data = {}
+                for info in entries:
+                    if info.tag in ('title', 'artist', 'album'):
+                        data[info.tag] = info.text.lower()
+        #print(data)
+        CACHED_DATA.append('%(title)s\t%(artist)s\t%(album)s' % data)
+        wehavemerged = True
         print('Processing last.fm dump file\n')
         with open(dumpfile, 'r') as csvfile:
             # lastscrape is sorted recent -> oldest so reverse that
@@ -181,9 +180,9 @@ if os.path.isfile(DB) and backupcreated:
                     entry = items[idx]
                     for info in entry:
                         if info.tag == 'play-count':
-                            mergeplays = True
                             tmpcount = int(info.text)
                             info.text = str(tmpcount + 1)
+                            mergeplays = True
                     #print(row)
                     if not mergeplays:
                         insertplaycount = etree.SubElement(entry, 'play-count')
@@ -197,11 +196,78 @@ if os.path.isfile(DB) and backupcreated:
                                 str(row[6]))
                     files.write('\n')
                     files.close()
+        print('Plays from Last.fm have been inserted into the database.\n')
+        print(ERRORPATH + ' contains all track that the script has missed.\n')
+    else:
+        print('no play dump file found\n')
+    if processloved and os.path.isfile(lovedfile):
+        CACHED_DATA = []
+        for entries in items:
+            if entries.attrib.get('type') == 'song':
+                data = {}
+                for info in entries:
+                    if info.tag in ('title', 'artist'):
+                        data[info.tag] = info.text.lower()
+            CACHED_DATA.append('%(title)s\t%(artist)s' % data)
+        wehavemerged = True
+        print('Processing last.fm loved file\n')
+        with open(lovedfile, 'r') as csvfile:
+            openfile = list(csv.reader(csvfile, delimiter='\t',))
+            for row in openfile:
+                tmprow = []
+                tmpsong = None
+                tmpartist = None
+                tmpalbum = None
+                tmpentry = None
+                tmpcount = None
+                mergeplays = False
+                foundartist = None
+                foundalbum = None
+                foundsong = None
+                idx = None
+                # using the last.fm data check for the same song in rhythmbox
+                try:
+                    test = row[0]
+                except IndexError:
+                    test = None
+                if test:
+                    if (row[1].lower() + '\t' + row[2].lower() in CACHED_DATA):
+                        idx = CACHED_DATA.index(row[1].lower() + '\t' +
+                                                row[2].lower())
+                    else:
+                        pass
+                # if the index is found, update the playcount
+                if idx:
+                    entry = items[idx]
+                    for info in entry:
+                        if info.tag == 'rating':
+                            if not info.text == '5':
+                                info.text = '5'
+                                mergeplays = True
+                            #print(row)
+                    if not mergeplays:
+                        insertplaycount = etree.SubElement(entry, 'rating')
+                        insertplaycount.text = '5'
+                        mergeplays = True
+                if not mergeplays and test:
+                    files = codecs.open(LOVEERRORPATH, "a", "utf8")
+                    files.write(str(row[0]) + '\t' + str(row[1]) + '\t' +
+                                str(row[2]) + '\t' + str(row[3]) + '\t' +
+                                str(row[4]) + '\t' + str(row[5]))
+                    files.write('\n')
+                    files.close()
+    else:
+        print('no loved tracks file found\n')
 
 # Save changes
+print('saving changes')
 output = etree.ElementTree(root)
 output.write(os.path.expanduser(DB), encoding="utf-8")
 
 # move dumpfiles so you don't accidentally reprocess them
-shutil.move(dumpfile, (dumpfile + '.old'))
+if processplays and wehavemerged:
+    shutil.move(dumpfile, (dumpfile + '.old'))
+#loved track can only be loved once so probably no reason to move.
+#if processloved and wehavemerged:
+#    shutil.move(lovedfile, (lovedfile + '.old'))
 print('Done')

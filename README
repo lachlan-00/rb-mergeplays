@@ -22,26 +22,26 @@ http://bugs.foocorp.net/projects/librefm/wiki/LastToLibre
 (the LastToLibre project seems dead now so you can grab the latest python3 version from my github)
 https://raw.githubusercontent.com/lachlan-00/lastscrape-gui/master/lastexport3.py
 
+LASTEXPORT3.PY
+--------------
+This script will pull data from last fm into a tab separated text file.
+
+Get a play count dump for your username.
+ * python3 ./lastexport3.py -u your_lastfm_username -t scrobbles -o dump.txt
+
+Get a list of loved tracks for your username.
+ * python3 ./lastexport3.py -u your_lastfm_username -t loved -o dump.txt
+
 
 MERGEPLAYS3.PY
--------------
-This script that will parse a text file and add each play to the current total in Rhythmbox OR create one if it's never been played. It
+--------------
+This script will parse a text file and add each play to the current total in Rhythmbox OR create one if it's never been played. It can also rate your loved tracks 5 stars.
 
-USAGE
- * Get a dump for your username.
-     python3 ./lastexport3.py -u your_lastfm_username -o dump.txt
+TO MERGE YOUR PLAYS INTO RHYTHMBOX
  * Run Merge Plays
     python3 ./mergeplays3.py /d:dump.txt
 
-
-RATE5LOVED.PY
--------------
-This script will be made redundant once i've merged it into the python3 version.
-
-
-PLANNED USAGE METHOD FOR PYTHON3
- * Get a dump for your username.
-     python3 ./lastexport3.py -u your_lastfm_username -o dump.txt
+TO RATE YOUR LOVED TRACKS AS 5 STARS
  * Run Merge Plays
     python3 ./mergeplays3.py /l:loved.txt
 
