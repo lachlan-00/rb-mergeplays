@@ -48,4 +48,5 @@ TO RATE YOUR LOVED TRACKS AS 5 STARS
 
 Notes
 -----
-If you use the default file names (dump.txt/loved.txt) the scripts will look for those files by default if no argument is given.
+ * Rhythmbox must be closed to edit the database
+ * If you use the default file names (dump.txt/loved.txt) the scripts will look for those files in you working directory by default if no argument is given.

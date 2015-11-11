@@ -40,14 +40,17 @@ LOVEERRORPATH = HOMEFOLDER + '/mergeplays-loved-error.txt'
 # get dump file name from arguments
 for arguments in sys.argv:
     if arguments[:3] == '/d:':
-        print('Using cmdline dumpfile ' + arguments[3:])
+        print('\nUsing cmdline dumpfile ' + arguments[3:] + '\n')
         dumpfile = arguments[3:]
-    if os.path.isfile(dumpfile):
-        processplays = True
     if arguments[:3] == '/l:':
+        print('\nUsing cmdline lovedfile ' + arguments[3:] + '\n')
         lovedfile = arguments[3:]
-    elif os.path.isfile(lovedfile):
-        processloved = True
+
+# decide whether to process
+if os.path.isfile(dumpfile):
+    processplays = True
+if os.path.isfile(lovedfile):
+    processloved = True
 
 urlascii = ('%', "#", ';', ' ', '"', '<', '>', '?', '[', '\\',
             "]", '^', '`', '{', '|', '}', '€', '‚', 'ƒ', '„',
@@ -115,20 +118,22 @@ def set_ascii(string):
         count = count + 1
     return string
 
-backupcreated = None
-try:
-    print('creating rhythmdb backup\n')
-    shutil.copy(DB, DBBackup)
-    backupcreated = True
-except FileNotFoundError:
-    backupcreated = False
-except PermissionError:
-    backupcreated = False
+# only start if the database has been backed up.
+if processplays or processloved:
+    backupcreated = None
+    try:
+        print('creating rhythmdb backup\n')
+        shutil.copy(DB, DBBackup)
+        backupcreated = True
+    except FileNotFoundError:
+        backupcreated = False
+    except PermissionError:
+        backupcreated = False
 
-
-print('Opening rhythmdb...\n')
-root = etree.parse(os.path.expanduser(DB)).getroot()
-items = [s for s in root.getiterator("entry") if s.attrib.get('type') == 'song']
+    # open the database
+    print('Opening rhythmdb...\n')
+    root = etree.parse(os.path.expanduser(DB)).getroot()
+    items = [s for s in root.getiterator("entry") if s.attrib.get('type') == 'song']
 
 
 # only process id db found and backup created.
@@ -142,8 +147,7 @@ if os.path.isfile(DB) and backupcreated:
                 for info in entries:
                     if info.tag in ('title', 'artist', 'album'):
                         data[info.tag] = info.text.lower()
-        #print(data)
-        CACHED_DATA.append('%(title)s\t%(artist)s\t%(album)s' % data)
+            CACHED_DATA.append('%(title)s\t%(artist)s\t%(album)s' % data)
         wehavemerged = True
         print('Processing last.fm dump file\n')
         with open(dumpfile, 'r') as csvfile:
@@ -198,6 +202,10 @@ if os.path.isfile(DB) and backupcreated:
                     files.close()
         print('Plays from Last.fm have been inserted into the database.\n')
         print(ERRORPATH + ' contains all track that the script has missed.\n')
+        # Save changes
+        print('saving changes')
+        output = etree.ElementTree(root)
+        output.write(os.path.expanduser(DB), encoding="utf-8")
     else:
         print('no play dump file found\n')
     if processloved and os.path.isfile(lovedfile):
@@ -256,18 +264,21 @@ if os.path.isfile(DB) and backupcreated:
                                 str(row[4]) + '\t' + str(row[5]))
                     files.write('\n')
                     files.close()
+
+        print('Loved from Last.fm have been rated 5 stars in the database.\n')
+        print(LOVEERRORPATH + ' contains all track that the script has missed.\n')
     else:
         print('no loved tracks file found\n')
 
-# Save changes
-print('saving changes')
-output = etree.ElementTree(root)
-output.write(os.path.expanduser(DB), encoding="utf-8")
+if wehavemerged:
+    # Save changes
+    print('saving changes')
+    output = etree.ElementTree(root)
+    output.write(os.path.expanduser(DB), encoding="utf-8")
 
 # move dumpfiles so you don't accidentally reprocess them
+# loved tracks can only be loved once so there's no reason to move.
 if processplays and wehavemerged:
     shutil.move(dumpfile, (dumpfile + '.old'))
-#loved track can only be loved once so probably no reason to move.
-#if processloved and wehavemerged:
-#    shutil.move(lovedfile, (lovedfile + '.old'))
+
 print('Done')
