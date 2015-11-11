@@ -2,8 +2,11 @@ Rhythmbox data from Last.fm
 GPLv3 <http://www.gnu.org/licenses/>
 
 Currently the project is two script files:
- * mergeplays.py
+ * mergeplays3.py (replacing merplays.py)
  * rate5loved.py
+
+Because of the speed increase (thanks to https://github.com/dopstar) I'll be merging rate5loved into into mergeplays3.py)
+
 
 ABOUT THE SCRIPTS
 -----------------
@@ -16,28 +19,31 @@ But with Merge Plays you can restore some of the lost information.
 lastexport.py is used for exporting your listening history (also loved/banned tracks) from last.fm or libre.fm to a text file.
 http://bugs.foocorp.net/projects/librefm/wiki/LastToLibre
 
+(the LastToLibre project seems dead now so you can grab the latest python3 version from my github)
+https://raw.githubusercontent.com/lachlan-00/lastscrape-gui/master/lastexport3.py
 
-MERGEPLAYS.PY
+
+MERGEPLAYS3.PY
 -------------
 This script that will parse a text file and add each play to the current total in Rhythmbox OR create one if it's never been played. It
 
 USAGE
  * Get a dump for your username.
-     python ./lastexport.py -u your_lastfm_username -o dump.txt
+     python3 ./lastexport3.py -u your_lastfm_username -o dump.txt
  * Run Merge Plays
-    python ./mergeplays.py dump.txt
+    python3 ./mergeplays3.py /d:dump.txt
 
 
 RATE5LOVED.PY
 -------------
-This script will take an export of your loved track from the last.fm website and make all those tracks 5 stars.
-It works in the same way as merge plays and will be integrated soon.
+This script will be made redundant once i've merged it into the python3 version.
 
-USAGE
- * Pull your loved tracks with lastexport:
-     python ./lastexport.py -u your_lastfm_username -t loved -o loved.txt
- * Merge with database:
-     python ./rate5loved.py loved.txt
+
+PLANNED USAGE METHOD FOR PYTHON3
+ * Get a dump for your username.
+     python3 ./lastexport3.py -u your_lastfm_username -o dump.txt
+ * Run Merge Plays
+    python3 ./mergeplays3.py /l:loved.txt
 
 
 Notes
