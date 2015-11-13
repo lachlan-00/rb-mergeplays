@@ -50,3 +50,4 @@ Notes
 -----
  * Rhythmbox must be closed to edit the database
  * If you use the default file names (dump.txt/loved.txt) the scripts will look for those files in you working directory by default if no argument is given.
+ * Last.fm may be missing the album from your play so there is an added /fuzzy switch that only searchs for the Song Title and Artist.
