@@ -1,15 +1,12 @@
 Rhythmbox data from Last.fm
 GPLv3 <http://www.gnu.org/licenses/>
 
-Currently the project is two script files:
- * mergeplays3.py (replacing merplays.py)
- * rate5loved.py
-
-Because of the speed increase (thanks to https://github.com/dopstar) I'll be merging rate5loved into into mergeplays3.py)
+Currently the project is a single script:
+ * mergeplays3.py (replacing mergeplays.py)
 
 
-ABOUT THE SCRIPTS
------------------
+ABOUT THE SCRIPT
+----------------
 I have used Last.fm for a lot longer than I've used Rhythmbox and a lot of songs show last played as 'Never'. 
 That kinda sucks for shuffle especially on large libraries.
 
@@ -21,6 +18,7 @@ http://bugs.foocorp.net/projects/librefm/wiki/LastToLibre
 
 (the LastToLibre project seems dead now so you can grab the latest python3 version from my github)
 https://raw.githubusercontent.com/lachlan-00/lastscrape-gui/master/lastexport3.py
+
 
 LASTEXPORT3.PY
 --------------
@@ -45,9 +43,34 @@ TO RATE YOUR LOVED TRACKS AS 5 STARS
  * Run Merge Plays
     python3 ./mergeplays3.py /l:loved.txt
 
+The default behaviour is to output a second text file with the results of the script.
+(mergeplays-playcount-PROCESSED.txt & mergeplays-loved-PROCESSED.txt)
+
+The new files will add an additional column at the end of each row.
+ * 0 means that the song was not processed
+ * 1 means the song was processed successfully
+
+The next time you run over this file it will skip songs that have been processed.
+
+
+OPTIONS AND COMMAND SWITCHES
+----------------------------
+There are limited options to allow you to change script behaviour.
+
+/fuzzy
+
+Last.fm may be missing the album from your play which mergeplays will skip by default.
+This switch will only search for the Song Title and Artist, matching the first result.
+
+/overwrite
+
+This will allow you to use the same file over and over without duplicating results.
+If your dump file has not been processed before it will rename to original to $(filename).old
+
 
 Notes
 -----
  * Rhythmbox must be closed to edit the database
  * If you use the default file names (dump.txt/loved.txt) the scripts will look for those files in you working directory by default if no argument is given.
- * Last.fm may be missing the album from your play so there is an added /fuzzy switch that only searchs for the Song Title and Artist.
+ * Because of the speed increase (thanks to https://github.com/dopstar) I have merged rate5loved into into mergeplays3.py
+ * There is now an additional column at the end of each row in the output file.
