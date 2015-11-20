@@ -21,34 +21,40 @@ import shutil
 import sys
 import xml.etree.ElementTree as etree
 
+# Process/script checks
 PROCESSPLAYS = None
 PROCESSLOVED = None
+WEHAVEMERGED = False
+DBBACKUP = None
 
-FUZZYSEARCH = False
-OVERWRITEDUMP = False
+# File check
 MERGEPLAYSFILE = False
 MERGELOVEDFILE = False
-WEHAVEMERGED = False
-backupcreated = None
 
-DUMPFILE = 'dump.txt'
-LOVEDFILE = 'loved.txt'
+# commandline arguments
+FUZZYSEARCH = False
+OVERWRITEDUMP = False
 
+# Default file names
+PLAYS = 'dump.txt'
+LOVED = 'loved.txt'
+PLAYLOG = 'mergeplays-playcount-PROCESSED.txt'
+LOVELOG = 'mergeplays-loved-PROCESSED.txt'
+
+# Default paths for rhythmbox & the user
 HOMEFOLDER = os.getenv('HOME')
 PATH = '/.local/share/rhythmbox/'
 DB = (HOMEFOLDER + PATH + 'rhythmdb.xml')
 DBBACKUP = (HOMEFOLDER + PATH + 'rhythmdb-backup-merge.xml')
-ERRORPATH = 'mergeplays-playcount-PROCESSED.txt'
-LOVEERRORPATH = 'mergeplays-loved-PROCESSED.txt'
 
 # get dump file name from arguments
 for arguments in sys.argv:
     if arguments[:3] == '/d:':
-        print('\nUsing cmdline DUMPFILE ' + arguments[3:] + '\n')
-        DUMPFILE = arguments[3:]
+        print('\nUsing cmdline plays file ' + arguments[3:] + '\n')
+        PLAYS = arguments[3:]
     if arguments[:3] == '/l:':
-        print('\nUsing cmdline LOVEDFILE ' + arguments[3:] + '\n')
-        LOVEDFILE = arguments[3:]
+        print('\nUsing cmdline loved file ' + arguments[3:] + '\n')
+        LOVED = arguments[3:]
     if arguments.lower() == '/fuzzy':
         print('\nIgnoring Album when searching for played tracks\n')
         FUZZYSEARCH = True
@@ -57,23 +63,23 @@ for arguments in sys.argv:
         OVERWRITEDUMP = True
 
 # decide whether to process
-if os.path.isfile(DUMPFILE):
+if os.path.isfile(PLAYS):
     PROCESSPLAYS = True
     # Don't overwrite yourself
-    if DUMPFILE == ERRORPATH:
-        ERRORPATH = ERRORPATH + '.tmp'
-if os.path.isfile(LOVEDFILE):
+    if PLAYS == PLAYLOG:
+        PLAYLOG = PLAYLOG + '.tmp'
+if os.path.isfile(LOVED):
     PROCESSLOVED = True
-    if LOVEDFILE == LOVEERRORPATH:
-        LOVEERRORPATH = LOVEERRORPATH + '.tmp'
+    if LOVED == LOVELOG:
+        LOVELOG = LOVELOG + '.tmp'
 
 # clear output files if they exist
-if os.path.isfile(ERRORPATH):
-    files = codecs.open(ERRORPATH, "w", "utf8")
-    files.close()
-if os.path.isfile(LOVEERRORPATH):
-    files = codecs.open(LOVEERRORPATH, "w", "utf8")
-    files.close()
+if os.path.isfile(PLAYLOG):
+    TMPFILE = codecs.open(PLAYLOG, "w", "utf8")
+    TMPFILE.close()
+if os.path.isfile(LOVELOG):
+    TMPFILE = codecs.open(LOVELOG, "w", "utf8")
+    TMPFILE.close()
 
 urlascii = ('%', "#", ';', ' ', '"', '<', '>', '?', '[', '\\',
             "]", '^', '`', '{', '|', '}', '€', '‚', 'ƒ', '„',
@@ -146,11 +152,11 @@ if PROCESSPLAYS or PROCESSLOVED:
     try:
         print('creating rhythmdb backup\n')
         shutil.copy(DB, DBBACKUP)
-        backupcreated = True
+        DBBACKUP = True
     except FileNotFoundError:
-        backupcreated = False
+        DBBACKUP = False
     except PermissionError:
-        backupcreated = False
+        DBBACKUP = False
 
     # open the database
     print('Opening rhythmdb...\n')
@@ -159,10 +165,10 @@ if PROCESSPLAYS or PROCESSLOVED:
 
 
 # only process id db found and backup created.
-if os.path.isfile(DB) and backupcreated:
+if os.path.isfile(DB) and DBBACKUP:
     print('Connection Established\n')
     # search for plays by artist, track AND album
-    if PROCESSPLAYS and os.path.isfile(DUMPFILE) and not FUZZYSEARCH:
+    if PROCESSPLAYS and os.path.isfile(PLAYS) and not FUZZYSEARCH:
         RBCACHE = []
         for entries in items:
             if entries.attrib.get('type') == 'song':
@@ -173,7 +179,7 @@ if os.path.isfile(DB) and backupcreated:
             RBCACHE.append('%(title)s\t%(artist)s\t%(album)s' % data)
         WEHAVEMERGED = True
         print('Processing last.fm dump file\n')
-        with open(DUMPFILE, 'r') as csvfile:
+        with open(PLAYS, 'r') as csvfile:
             # lastscrape is sorted recent -> oldest so reverse that
             # that way the database will have a lower ID for older tracks
             openfile = reversed(list(csv.reader(csvfile, delimiter='\t',)))
@@ -222,7 +228,7 @@ if os.path.isfile(DB) and backupcreated:
                         mergeplays = True
                 # write 0 to show nothing was written to the database
                 if not mergeplays and test:
-                    files = codecs.open(ERRORPATH, "a", "utf8")
+                    files = codecs.open(PLAYLOG, "a", "utf8")
                     files.write(str(row[0]) + '\t' + str(row[1]) + '\t' +
                                 str(row[2]) + '\t' + str(row[3]) + '\t' +
                                 str(row[4]) + '\t' + str(row[5]) + '\t' +
@@ -231,7 +237,7 @@ if os.path.isfile(DB) and backupcreated:
                     files.close()
                 # write 1 to show that the play was written to the database
                 elif mergeplays and test:
-                    files = codecs.open(ERRORPATH, "a", "utf8")
+                    files = codecs.open(PLAYLOG, "a", "utf8")
                     files.write(str(row[0]) + '\t' + str(row[1]) + '\t' +
                                 str(row[2]) + '\t' + str(row[3]) + '\t' +
                                 str(row[4]) + '\t' + str(row[5]) + '\t' +
@@ -240,14 +246,14 @@ if os.path.isfile(DB) and backupcreated:
                     files.close()
         print('Plays from Last.fm have been inserted into the database.\n')
         if not OVERWRITEDUMP:
-            print(ERRORPATH + ' contains all track that the script ' +
+            print(PLAYLOG + ' contains all track that the script ' +
                   'has processed.\n')
         # Save changes
         print('saving changes')
         output = etree.ElementTree(root)
         output.write(os.path.expanduser(DB), encoding="utf-8")
     # For tracks that are missing album the fuzzy search is a good idea
-    elif PROCESSPLAYS and os.path.isfile(DUMPFILE) and FUZZYSEARCH:
+    elif PROCESSPLAYS and os.path.isfile(PLAYS) and FUZZYSEARCH:
         choice = str(input('Warning: When using fuzzy search\n\nThis ' +
                            'will add a play for the first matching' +
                            ' Song + Artist in the Rhythmbox databa' +
@@ -269,7 +275,7 @@ if os.path.isfile(DB) and backupcreated:
                 RBCACHE.append('%(title)s\t%(artist)s' % data)
             WEHAVEMERGED = True
             print('Processing last.fm dump file\n')
-            with open(DUMPFILE, 'r') as csvfile:
+            with open(PLAYS, 'r') as csvfile:
                 # lastscrape is sorted recent -> oldest so reverse that
                 # that way the database will have a lower ID for older tracks
                 openfile = reversed(list(csv.reader(csvfile, delimiter='\t',)))
@@ -317,7 +323,7 @@ if os.path.isfile(DB) and backupcreated:
                             mergeplays = True
                     # write 0 to show nothing was written to the database
                     if not mergeplays and test:
-                        files = codecs.open(ERRORPATH, "a", "utf8")
+                        files = codecs.open(PLAYLOG, "a", "utf8")
                         files.write(str(row[0]) + '\t' + str(row[1]) + '\t' +
                                     str(row[2]) + '\t' + str(row[3]) + '\t' +
                                     str(row[4]) + '\t' + str(row[5]) + '\t' +
@@ -326,7 +332,7 @@ if os.path.isfile(DB) and backupcreated:
                         files.close()
                     # write 1 to show that the play was written to the database
                     elif mergeplays and test:
-                        files = codecs.open(ERRORPATH, "a", "utf8")
+                        files = codecs.open(PLAYLOG, "a", "utf8")
                         files.write(str(row[0]) + '\t' + str(row[1]) + '\t' +
                                     str(row[2]) + '\t' + str(row[3]) + '\t' +
                                     str(row[4]) + '\t' + str(row[5]) + '\t' +
@@ -336,7 +342,7 @@ if os.path.isfile(DB) and backupcreated:
             print('Fuzzy plays from Last.fm have been inserted into' +
                   ' the database.\n')
             if not OVERWRITEDUMP:
-                print(ERRORPATH + ' contains all track that the script ' +
+                print(PLAYLOG + ' contains all track that the script ' +
                       'has processed.\n')
             # Save changes
             print('saving changes')
@@ -344,7 +350,7 @@ if os.path.isfile(DB) and backupcreated:
             output.write(os.path.expanduser(DB), encoding="utf-8")
     else:
         print('no play dump file found\n')
-    if PROCESSLOVED and os.path.isfile(LOVEDFILE):
+    if PROCESSLOVED and os.path.isfile(LOVED):
         RBCACHE = []
         for entries in items:
             if entries.attrib.get('type') == 'song':
@@ -355,7 +361,7 @@ if os.path.isfile(DB) and backupcreated:
             RBCACHE.append('%(title)s\t%(artist)s' % data)
         WEHAVEMERGED = True
         print('Processing last.fm loved file\n')
-        with open(LOVEDFILE, 'r') as csvfile:
+        with open(LOVED, 'r') as csvfile:
             openfile = list(csv.reader(csvfile, delimiter='\t',))
             for row in openfile:
                 tmprow = []
@@ -400,7 +406,7 @@ if os.path.isfile(DB) and backupcreated:
                         mergeplays = True
                 # write 0 to show nothing was written to the database
                 if not mergeplays and test:
-                    files = codecs.open(LOVEERRORPATH, "a", "utf8")
+                    files = codecs.open(LOVELOG, "a", "utf8")
                     files.write(str(row[0]) + '\t' + str(row[1]) + '\t' +
                                 str(row[2]) + '\t' + str(row[3]) + '\t' +
                                 str(row[4]) + '\t' + str(row[5]) + '\t' +
@@ -409,7 +415,7 @@ if os.path.isfile(DB) and backupcreated:
                     files.close()
                 # write 1 to show that the play was written to the database
                 elif mergeplays and test:
-                    files = codecs.open(LOVEERRORPATH, "a", "utf8")
+                    files = codecs.open(LOVELOG, "a", "utf8")
                     files.write(str(row[0]) + '\t' + str(row[1]) + '\t' +
                                 str(row[2]) + '\t' + str(row[3]) + '\t' +
                                 str(row[4]) + '\t' + str(row[5]) + '\t' +
@@ -419,7 +425,7 @@ if os.path.isfile(DB) and backupcreated:
 
         print('Loved from Last.fm have been rated 5 stars in the database.\n')
         if not OVERWRITEDUMP:
-            print(LOVEERRORPATH + ' contains the results of the script.\n')
+            print(LOVELOG + ' contains the results of the script.\n')
     else:
         print('no loved tracks file found\n')
 else:
@@ -432,25 +438,25 @@ if WEHAVEMERGED:
     output = etree.ElementTree(root)
     output.write(os.path.expanduser(DB), encoding="utf-8")
 
-# move DUMPFILEs so you don't accidentally reprocess them
+# move PLAYSs so you don't accidentally reprocess them
 # loved tracks can only be loved once so there's no reason to move.
 if PROCESSPLAYS and WEHAVEMERGED:
     # rename source if it hasn't got a mergeplays status column
     if not MERGEPLAYSFILE:
         print('renaming source dump file')
-        shutil.move(DUMPFILE, (DUMPFILE + '.old'))
+        shutil.move(PLAYS, (PLAYS + '.old'))
     # replace file with the latest processed copy
     if OVERWRITEDUMP:
         print('replacing original dumpfile with process markers')
-        shutil.move(ERRORPATH, DUMPFILE)
+        shutil.move(PLAYLOG, PLAYS)
 if PROCESSLOVED and WEHAVEMERGED:
     # rename source if it hasn't got a mergeplays status column
     if not MERGELOVEDFILE:
         print('renaming source loved file')
-        shutil.move(LOVEDFILE, (LOVEDFILE + '.old'))
+        shutil.move(LOVED, (LOVED + '.old'))
     # replace file with the latest processed copy
     if OVERWRITEDUMP:
         print('and replacing original lovedfile with process markers')
-        shutil.move(LOVEERRORPATH, DUMPFILE)
+        shutil.move(LOVELOG, LOVED)
 
 print('Done')
