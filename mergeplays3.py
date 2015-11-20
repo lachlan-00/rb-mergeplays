@@ -161,7 +161,8 @@ if PROCESSPLAYS or PROCESSLOVED:
     # open the database
     print('Opening rhythmdb...\n')
     root = etree.parse(os.path.expanduser(DB)).getroot()
-    items = [s for s in root.getiterator("entry") if s.attrib.get('type') == 'song']
+    items = [s for s in root.getiterator("entry")
+             if s.attrib.get('type') == 'song']
 
 
 # only process id db found and backup created.
@@ -208,11 +209,10 @@ if os.path.isfile(DB) and DBBACKUP:
                             MERGEPLAYSFILE = True
                             mergeplays = True
                     if not mergeplays:
-                        if (row[1].lower() + '\t' + row[2].lower() + '\t' +
-                            row[3].lower() in RBCACHE):
-                            idx = RBCACHE.index(row[1].lower() + '\t' +
-                                                row[2].lower() + '\t' +
-                                                row[3].lower())
+                        tmpcheck = (row[1].lower() + '\t' + row[2].lower() +
+                                    '\t' + row[3].lower())
+                        if tmpcheck in RBCACHE:
+                            idx = RBCACHE.index(tmpcheck)
                 # if the index is found, update the playcount
                 if idx:
                     entry = items[idx]
@@ -304,9 +304,9 @@ if os.path.isfile(DB) and DBBACKUP:
                                 MERGEPLAYSFILE = True
                                 mergeplays = True
                         if not mergeplays:
-                            if row[1].lower() + '\t' + row[2].lower() in RBCACHE:
-                                idx = RBCACHE.index(row[1].lower() + '\t' +
-                                                    row[2].lower())
+                            tmpcheck = row[1].lower() + '\t' + row[2].lower()
+                            if tmpcheck in RBCACHE:
+                                idx = RBCACHE.index(tmpcheck)
                     # if the index is found, update the playcount
                     if idx:
                         entry = items[idx]
@@ -337,8 +337,8 @@ if os.path.isfile(DB) and DBBACKUP:
                                     str(row[2]) + '\t' + str(row[3]) + '\t' +
                                     str(row[4]) + '\t' + str(row[5]) + '\t' +
                                     str(row[6]) + '\t' + '1')
-                    files.write('\n')
-                    files.close()
+                        files.write('\n')
+                        files.close()
             print('Fuzzy plays from Last.fm have been inserted into' +
                   ' the database.\n')
             if not OVERWRITEDUMP:
@@ -389,9 +389,9 @@ if os.path.isfile(DB) and DBBACKUP:
                             mergeplays = True
                     if not mergeplays:
                         # match rows with cache
-                        if row[1].lower() + '\t' + row[2].lower() in RBCACHE:
-                            idx = RBCACHE.index(row[1].lower() + '\t' +
-                                                row[2].lower())
+                        tmpcheck = row[1].lower() + '\t' + row[2].lower()
+                        if tmpcheck in RBCACHE:
+                            idx = RBCACHE.index(tmpcheck)
                 # if the index is found, update the playcount
                 if idx:
                     entry = items[idx]
